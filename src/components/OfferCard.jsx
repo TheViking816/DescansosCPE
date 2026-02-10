@@ -37,8 +37,8 @@ export default function OfferCard({ offer, user, matchQuality, showMatch = false
   const whatsappUrl = buildWhatsappUrl(phone);
 
   const especialidad =
-    titleCaseWords(user.especialidades?.nombre) ||
     titleCaseWords(user.especialidad_nombre) ||
+    titleCaseWords(user.especialidades?.nombre) ||
     '';
 
   return (

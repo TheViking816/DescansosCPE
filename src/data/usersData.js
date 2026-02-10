@@ -3,12 +3,12 @@ import { supabase } from '../lib/supabaseClient';
 export async function getProfileByAuthUserId(authUserId) {
   const { data, error } = await supabase
     .from('usuarios')
-    .select('*, especialidades ( nombre )')
+    .select('*')
     .eq('id', authUserId)
     .maybeSingle();
 
   if (error) {
-    console.error('Error fetching profile:', error);
+    console.error('Error fetching profile:', { message: error.message, details: error.details, hint: error.hint, code: error.code });
     return null;
   }
   return data;

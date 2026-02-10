@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { getOffers } from '../data/offersStore';
@@ -16,6 +16,7 @@ export default function Dashboard() {
   const [filterSemana, setFilterSemana] = useState('');
   const [filterFecha, setFilterFecha] = useState('');
   const [specialties, setSpecialties] = useState(null);
+  const specialtiesMapRef = useRef({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,18 +37,28 @@ export default function Dashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    const map = {};
+    for (const sp of specialties || []) map[String(sp.codigo)] = sp.nombre;
+    specialtiesMapRef.current = map;
+  }, [specialties]);
+
   async function loadData() {
     try {
       const offersData = await getOffers();
-      const { data: usersData, error: usersError } = await supabase.from('usuarios').select('*, especialidades ( nombre )');
+      const { data: usersData, error: usersError } = await supabase.from('usuarios').select('*');
 
       setOffers(offersData || []);
 
       if (usersError) {
         console.error('Error fetching users:', usersError);
       } else if (usersData) {
+        const spMap = specialtiesMapRef.current || {};
         const map = {};
-        usersData.forEach((u) => (map[u.id] = u));
+        usersData.forEach((u) => {
+          const codigo = String(u.especialidad_codigo || '');
+          map[u.id] = { ...u, especialidad_nombre: spMap[codigo] || '' };
+        });
         setUsersMap(map);
       }
     } catch (error) {
