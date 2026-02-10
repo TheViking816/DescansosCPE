@@ -33,7 +33,11 @@ async function makeIcon({ size, filename, paddingRatio, bg }) {
   const logo = await sharp(srcPng)
     .ensureAlpha()
     .trim()
-    .resize(content, content, { fit: 'contain' })
+    .resize(content, content, {
+      fit: 'contain',
+      // Avoid black "letterbox" bars when the source is not square.
+      background: { r: 255, g: 255, b: 255, alpha: 0 },
+    })
     .png()
     .toBuffer();
 
