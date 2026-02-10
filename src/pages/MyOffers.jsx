@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { deleteOffer, getOffersByUser, updateOffer } from '../data/offersStore';
+import { deleteOffer, getOffers, getOffersByUser, updateOffer } from '../data/offersStore';
 import { updateUserPhone } from '../data/usersData';
 import OfferCard from '../components/OfferCard';
+import { validateOffer } from '../logic/matchingEngine';
 
 export default function MyOffers() {
   const { currentUser, refreshProfile } = useAuth();
@@ -40,6 +41,14 @@ export default function MyOffers() {
     if (!editingOffer) return;
     setOfferError('');
     setSavingOffer(true);
+
+    const all = await getOffers();
+    const validation = validateOffer(currentUser.id, editingOffer, all);
+    if (!validation.valid) {
+      setOfferError(validation.errors.join(' '));
+      setSavingOffer(false);
+      return;
+    }
 
     const ok = await updateOffer(editingOffer.id, {
       tengoDesde: editingOffer.tengoDesde,
