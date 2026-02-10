@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { isValidChapa, normalizeChapa } from '../lib/authId';
@@ -11,6 +11,11 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const submitLockRef = useRef(false);
+
+  useEffect(() => {
+    // Login should start in light mode by default; users can toggle inside the app.
+    document.documentElement.setAttribute('data-theme', 'light');
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -103,9 +108,6 @@ export default function LoginPage() {
           </p>
           <p className="text-sm-muted" style={{ marginTop: 12 }}>
             ¿No tienes cuenta? <a href="/register">Crear cuenta</a>
-          </p>
-          <p className="text-sm-muted" style={{ marginTop: 8 }}>
-            ¿Has olvidado la contrasena? <a href="/recuperar">Recuperar</a>
           </p>
         </div>
       </div>

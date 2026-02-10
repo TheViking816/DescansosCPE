@@ -1,5 +1,4 @@
 import { supabase } from '../lib/supabaseClient';
-import { sha256Hex } from '../lib/sha256';
 
 export async function getProfileByAuthUserId(authUserId) {
   const { data, error } = await supabase
@@ -89,21 +88,6 @@ export async function deleteUserAvatar(authUserId) {
     return { success: false, error: String(e?.message || e) };
   }
 }
-
-export async function setRecoveryCode(authUserId, code) {
-  try {
-    const c = String(code ?? '').trim();
-    if (!/^[0-9]{6}$/.test(c)) return { success: false, error: 'El codigo debe tener 6 digitos.' };
-    const hash = await sha256Hex(c);
-
-    const { error } = await supabase.from('usuarios').update({ recovery_code_hash: hash }).eq('id', authUserId);
-    if (error) return { success: false, error: error.message };
-    return { success: true };
-  } catch (e) {
-    return { success: false, error: String(e?.message || e) };
-  }
-}
-
 
 
 

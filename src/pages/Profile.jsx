@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getGroups } from '../data/groupsData';
 import { getSpecialties } from '../data/specialtiesData';
-import { deleteUserAvatar, setRecoveryCode, updateUserProfile, uploadUserAvatar } from '../data/usersData';
+import { deleteUserAvatar, updateUserProfile, uploadUserAvatar } from '../data/usersData';
 import { isValidChapa, normalizeChapa } from '../lib/authId';
 import { supabase } from '../lib/supabaseClient';
 import { authEmailFromChapa } from '../lib/authId';
@@ -39,9 +39,6 @@ export default function Profile() {
   const [info, setInfo] = useState('');
   const [uploading, setUploading] = useState(false);
   const [deletingAvatar, setDeletingAvatar] = useState(false);
-
-  const [recoveryCode, setRecoveryCodeInput] = useState('');
-  const [savingRecoveryCode, setSavingRecoveryCode] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -174,17 +171,6 @@ export default function Profile() {
     setDeletingAvatar(false);
   }
 
-  async function handleSaveRecoveryCode(e) {
-    e.preventDefault();
-    setError('');
-    setInfo('');
-    setSavingRecoveryCode(true);
-    const res = await setRecoveryCode(currentUser.id, recoveryCode);
-    if (!res.success) setError(res.error || 'No se pudo guardar el codigo');
-    else setInfo('Codigo de recuperacion guardado');
-    setSavingRecoveryCode(false);
-  }
-
   async function handleChangePassword(e) {
     e.preventDefault();
     setError('');
@@ -271,28 +257,8 @@ export default function Profile() {
           <h2 style={{ fontSize: 16, fontWeight: 800 }}>Seguridad</h2>
         </div>
         <p className="form-section-desc">
-          Puedes configurar un codigo de recuperacion para resetear la contrasena sin email, y tambien cambiar tu contrasena desde aqui.
+          Puedes cambiar tu contrasena desde aqui.
         </p>
-
-        <form onSubmit={handleSaveRecoveryCode}>
-          <div className="input-group" style={{ marginBottom: 12 }}>
-            <label htmlFor="recoveryCode">Codigo de recuperacion (6 digitos)</label>
-            <input
-              id="recoveryCode"
-              type="text"
-              inputMode="numeric"
-              value={recoveryCode}
-              onChange={(e) => setRecoveryCodeInput(e.target.value.replace(/\D+/g, '').slice(0, 6))}
-              placeholder="******"
-              autoComplete="one-time-code"
-            />
-          </div>
-          <button type="submit" className="btn-secondary" disabled={savingRecoveryCode}>
-            {savingRecoveryCode ? 'Guardando...' : 'Guardar codigo'}
-          </button>
-        </form>
-
-        <div style={{ height: 14 }} />
 
         <form onSubmit={handleChangePassword}>
           <div className="input-group">
