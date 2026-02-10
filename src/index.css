@@ -132,14 +132,17 @@ body {
   background: var(--bg-primary);
   color: var(--text-primary);
   line-height: 1.6;
-  min-height: 100dvh;
+  /* Use a stable viewport height on mobile so fixed bottom nav doesn't "jump" when the URL bar collapses. */
+  min-height: 100vh;
+  min-height: 100svh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
 #root {
-  min-height: 100dvh;
+  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   flex-direction: column;
 }
@@ -149,7 +152,8 @@ body {
    ============================================ */
 
 .login-page {
-  min-height: 100dvh;
+  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -369,7 +373,8 @@ body {
 }
 
 .loading-screen {
-  min-height: 100dvh;
+  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1089,6 +1094,7 @@ body {
   padding: 0 8px;
   padding-bottom: env(safe-area-inset-bottom, 0);
   z-index: 1000;
+  transform: translateZ(0);
 }
 
 .nav-item {
