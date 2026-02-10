@@ -1,9 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { deleteOffer, getOffers, getOffersByUser, updateOffer } from '../data/offersStore';
+import { getSpecialties } from '../data/specialtiesData';
 import { updateUserPhone } from '../data/usersData';
 import OfferCard from '../components/OfferCard';
 import { validateOffer } from '../logic/matchingEngine';
+
+function titleCaseWords(s) {
+  return String(s || '')
+    .trim()
+    .toLowerCase()
+    .split(/\s+/g)
+    .filter(Boolean)
+    .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(' ');
+}
 
 export default function MyOffers() {
   const { currentUser, refreshProfile } = useAuth();
@@ -14,6 +25,8 @@ export default function MyOffers() {
   const [phone, setPhone] = useState(currentUser.telefono || '');
   const [editingPhone, setEditingPhone] = useState(false);
   const [savingPhone, setSavingPhone] = useState(false);
+  const [specialties, setSpecialties] = useState([]);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
     setPhone(currentUser.telefono || '');
@@ -21,6 +34,7 @@ export default function MyOffers() {
 
   useEffect(() => {
     loadOffers();
+    loadSpecialties();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -28,6 +42,20 @@ export default function MyOffers() {
     const data = await getOffersByUser(currentUser.id);
     setOffers(data || []);
   }
+
+  async function loadSpecialties() {
+    const s = await getSpecialties();
+    setSpecialties(s || []);
+  }
+
+  const currentEspecialidadLabel = useMemo(() => {
+    const code = currentUser.especialidad_codigo || currentUser.especialidadCodigo || '';
+    const sp = specialties.find((x) => String(x.codigo) === String(code));
+    if (sp) return titleCaseWords(sp.nombre);
+    return '';
+  }, [currentUser.especialidad_codigo, currentUser.especialidadCodigo, specialties]);
+
+  const calendarPdfUrl = useMemo(() => new URL('../../assets/descansos.pdf', import.meta.url).href, []);
 
   async function handleDelete(offerId) {
     if (window.confirm('Seguro que quieres eliminar esta oferta?')) {
@@ -102,6 +130,7 @@ export default function MyOffers() {
               Grupo {currentUser.grupo_descanso || currentUser.grupoDescanso}
             </span>
             <span className={`tag tag-semana-${currentUser.semana?.toLowerCase()}`}>{currentUser.semana === 'V' ? 'Verde' : 'Naranja'}</span>
+            {currentEspecialidadLabel ? <span className="tag tag-profesion">{currentEspecialidadLabel}</span> : null}
           </div>
 
           <div className="phone-editor">
@@ -129,6 +158,28 @@ export default function MyOffers() {
 
           <p className="chapa-label">Chapa: {currentUser.chapa}</p>
         </div>
+      </div>
+
+      <div className="form-section calendar-section" style={{ marginBottom: 16 }}>
+        <div className="form-section-header">
+          <h2 style={{ fontSize: 16, fontWeight: 800 }}>Calendario de descansos</h2>
+        </div>
+        <p className="form-section-desc">
+          Visor rapido del calendario. En algunos moviles (sobre todo iOS) el PDF puede abrirse mejor en otra pestana.
+        </p>
+        <div className="calendar-actions">
+          <a className="btn-secondary" href={calendarPdfUrl} target="_blank" rel="noreferrer">
+            Abrir PDF
+          </a>
+          <button type="button" className="btn-secondary" onClick={() => setShowCalendar((v) => !v)}>
+            {showCalendar ? 'Ocultar aqui' : 'Ver aqui'}
+          </button>
+        </div>
+        {showCalendar ? (
+          <div className="pdf-viewer">
+            <iframe title="Calendario de descansos" src={calendarPdfUrl} />
+          </div>
+        ) : null}
       </div>
 
       <div className="offers-feed">

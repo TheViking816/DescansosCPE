@@ -35,30 +35,32 @@ function AppRoutes() {
   const { authUser } = useAuth();
 
   return (
-    <>
-      <Routes>
-        <Route path="/login" element={
-          authUser ? <Navigate to="/dashboard" replace /> : <LoginPage />
-        } />
-        <Route path="/register" element={
-          authUser ? <Navigate to="/dashboard" replace /> : <RegisterPage />
-        } />
-        <Route path="/dashboard" element={
-          <ProtectedRoute><Dashboard /></ProtectedRoute>
-        } />
-        <Route path="/crear" element={
-          <ProtectedRoute><CreateOffer /></ProtectedRoute>
-        } />
-        <Route path="/mis-ofertas" element={
-          <ProtectedRoute><MyOffers /></ProtectedRoute>
-        } />
-        <Route path="/perfil" element={
-          <ProtectedRoute><Profile /></ProtectedRoute>
-        } />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+    <div className="app-shell">
+      <div className="app-content">
+        <Routes>
+          <Route path="/login" element={
+            authUser ? <Navigate to="/dashboard" replace /> : <LoginPage />
+          } />
+          <Route path="/register" element={
+            authUser ? <Navigate to="/dashboard" replace /> : <RegisterPage />
+          } />
+          <Route path="/dashboard" element={
+            <ProtectedRoute><Dashboard /></ProtectedRoute>
+          } />
+          <Route path="/crear" element={
+            <ProtectedRoute><CreateOffer /></ProtectedRoute>
+          } />
+          <Route path="/mis-ofertas" element={
+            <ProtectedRoute><MyOffers /></ProtectedRoute>
+          } />
+          <Route path="/perfil" element={
+            <ProtectedRoute><Profile /></ProtectedRoute>
+          } />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </div>
       <Navbar />
-    </>
+    </div>
   );
 }
 
