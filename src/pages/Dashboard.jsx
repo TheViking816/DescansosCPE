@@ -39,7 +39,7 @@ export default function Dashboard() {
   async function loadData() {
     try {
       const offersData = await getOffers();
-      const { data: usersData, error: usersError } = await supabase.from('usuarios').select('*');
+      const { data: usersData, error: usersError } = await supabase.from('usuarios').select('*, especialidades ( nombre )');
 
       setOffers(offersData || []);
 

@@ -74,8 +74,8 @@ export default function Profile() {
   const currentEspecialidadLabel = useMemo(() => {
     const code = currentUser.especialidad_codigo || '';
     const sp = specialties.find((x) => String(x.codigo) === String(code));
-    if (sp) return `${sp.codigo} ${titleCaseWords(sp.nombre)}`;
-    return code ? String(code) : '';
+    if (sp) return titleCaseWords(sp.nombre);
+    return '';
   }, [currentUser.especialidad_codigo, specialties]);
 
   function updateField(name, value) {

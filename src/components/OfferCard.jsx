@@ -2,6 +2,16 @@ import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { normalizePhoneE164 } from '../lib/phone';
 
+function titleCaseWords(s) {
+  return String(s || '')
+    .trim()
+    .toLowerCase()
+    .split(/\s+/g)
+    .filter(Boolean)
+    .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(' ');
+}
+
 function formatDateRange(desde, hasta) {
   const d = parseISO(desde);
   const h = parseISO(hasta);
@@ -27,7 +37,9 @@ export default function OfferCard({ offer, user, matchQuality, showMatch = false
   const whatsappUrl = buildWhatsappUrl(phone);
 
   const especialidad =
-    user.especialidad_codigo || user.especialidadCodigo || user.grupoProfesional || user.grupo_profesional || '';
+    titleCaseWords(user.especialidades?.nombre) ||
+    titleCaseWords(user.especialidad_nombre) ||
+    '';
 
   return (
     <div className={`offer-card ${showMatch ? `match-${matchQuality}` : ''}`}>
