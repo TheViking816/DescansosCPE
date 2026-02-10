@@ -1,4 +1,4 @@
-import { differenceInDays, eachDayOfInterval, parseISO, getMonth, getYear } from 'date-fns';
+import { parseISO, isValid } from 'date-fns';
 
 /**
  * Calcula la calidad del match entre dos usuarios
@@ -70,12 +70,22 @@ export function findMatches(offer, allOffers) {
  */
 export function validateOffer(userId, newOffer, existingOffers) {
     const errors = [];
+
+    // Validation is intentionally minimal: the official rule checks happen in the CPE portal.
+    // Here we only prevent broken/invalid date inputs that would break UI logic.
+    if (!newOffer?.tengoDesde || !newOffer?.tengoHasta || !newOffer?.necesitoDesde || !newOffer?.necesitoHasta) {
+        return { valid: false, errors: ['Selecciona todas las fechas.'] };
+    }
+
     const tengoDesde = parseISO(newOffer.tengoDesde);
     const tengoHasta = parseISO(newOffer.tengoHasta);
     const necesitoDesde = parseISO(newOffer.necesitoDesde);
     const necesitoHasta = parseISO(newOffer.necesitoHasta);
 
-    // Validación básica de fechas
+    if (!isValid(tengoDesde) || !isValid(tengoHasta) || !isValid(necesitoDesde) || !isValid(necesitoHasta)) {
+        return { valid: false, errors: ['Formato de fecha invalido.'] };
+    }
+
     if (tengoDesde > tengoHasta) {
         errors.push('La fecha "Tengo desde" no puede ser posterior a "Tengo hasta".');
     }
@@ -83,62 +93,5 @@ export function validateOffer(userId, newOffer, existingOffers) {
         errors.push('La fecha "Necesito desde" no puede ser posterior a "Necesito hasta".');
     }
 
-    // Calcular días de descanso por mes considerando la oferta
-    // "Tengo" = días que renuncio a descansar (disponible para trabajar)
-    // "Necesito" = días que quiero descansar
-    const tengodays = differenceInDays(tengoHasta, tengoDesde) + 1;
-    // NOTE: `necesitodays` reserved for future rules.
-
-    // Obtener el mes de referencia (usamos el mes de "necesito")
-    const month = getMonth(necesitoDesde);
-    const year = getYear(necesitoDesde);
-
-    // Contar los días de descanso existentes del usuario en ese mes
-    // filtered existingOffers passed to function
-    let restDaysInMonth = 6; // Asumimos 6 días base de descanso por mes
-
-    for (const offer of existingOffers) {
-        // Skip checking userId here, assume caller passed only relevant offers or check inside loop
-        if (offer.userId !== userId) continue;
-
-        const od = parseISO(offer.tengoDesde);
-        const oh = parseISO(offer.tengoHasta);
-        const nd = parseISO(offer.necesitoDesde);
-        const nh = parseISO(offer.necesitoHasta);
-
-        // Días que cede en ese mes
-        const cededDays = eachDayOfInterval({ start: od, end: oh })
-            .filter(d => getMonth(d) === month && getYear(d) === year).length;
-        // Días que gana en ese mes
-        const gainedDays = eachDayOfInterval({ start: nd, end: nh })
-            .filter(d => getMonth(d) === month && getYear(d) === year).length;
-
-        restDaysInMonth = restDaysInMonth - cededDays + gainedDays;
-    }
-
-    // Aplicar el efecto de la nueva oferta
-    const newCeded = eachDayOfInterval({ start: tengoDesde, end: tengoHasta })
-        .filter(d => getMonth(d) === month && getYear(d) === year).length;
-    const newGained = eachDayOfInterval({ start: necesitoDesde, end: necesitoHasta })
-        .filter(d => getMonth(d) === month && getYear(d) === year).length;
-
-    const projectedRestDays = restDaysInMonth - newCeded + newGained;
-
-    if (projectedRestDays < 5) {
-        errors.push(`No puedes descansar menos de 5 días al mes. Con este cambio tendrías ${projectedRestDays} días.`);
-    }
-    if (projectedRestDays > 7) {
-        errors.push(`No puedes descansar más de 7 días al mes. Con este cambio tendrías ${projectedRestDays} días.`);
-    }
-
-    // Regla de 19 días seguidos en disponibilidad
-    // Verificamos que los días cedidos no generen más de 19 días seguidos trabajando
-    if (tengodays > 19) {
-        errors.push('No puedes ceder más de 19 días de descanso seguidos (máximo 19 días en disponibilidad).');
-    }
-
-    return {
-        valid: errors.length === 0,
-        errors,
-    };
+    return { valid: errors.length === 0, errors };
 }
