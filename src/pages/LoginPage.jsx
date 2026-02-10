@@ -104,9 +104,11 @@ export default function LoginPage() {
           <p className="text-sm-muted" style={{ marginTop: 12 }}>
             ¿No tienes cuenta? <a href="/register">Crear cuenta</a>
           </p>
+          <p className="text-sm-muted" style={{ marginTop: 8 }}>
+            ¿Has olvidado la contrasena? <a href="/recuperar">Recuperar</a>
+          </p>
         </div>
       </div>
     </div>
   );
 }
-

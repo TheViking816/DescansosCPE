@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getGroups } from '../data/groupsData';
 import { getSpecialties } from '../data/specialtiesData';
-import { updateUserProfile, uploadUserAvatar } from '../data/usersData';
+import { deleteUserAvatar, setRecoveryCode, updateUserProfile, uploadUserAvatar } from '../data/usersData';
 import { isValidChapa, normalizeChapa } from '../lib/authId';
+import { supabase } from '../lib/supabaseClient';
+import { authEmailFromChapa } from '../lib/authId';
 
 function titleCaseWords(s) {
   return String(s || '')
@@ -36,6 +38,15 @@ export default function Profile() {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [deletingAvatar, setDeletingAvatar] = useState(false);
+
+  const [recoveryCode, setRecoveryCodeInput] = useState('');
+  const [savingRecoveryCode, setSavingRecoveryCode] = useState(false);
+
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newPassword2, setNewPassword2] = useState('');
+  const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -151,6 +162,73 @@ export default function Profile() {
     setUploading(false);
   }
 
+  async function handleDeleteAvatar() {
+    if (!currentUser.avatar_url) return;
+    if (!window.confirm('Eliminar foto de perfil?')) return;
+    setDeletingAvatar(true);
+    setError('');
+    setInfo('');
+    const res = await deleteUserAvatar(currentUser.id);
+    if (!res.success) setError(res.error || 'No se pudo eliminar la foto');
+    await refreshProfile();
+    setDeletingAvatar(false);
+  }
+
+  async function handleSaveRecoveryCode(e) {
+    e.preventDefault();
+    setError('');
+    setInfo('');
+    setSavingRecoveryCode(true);
+    const res = await setRecoveryCode(currentUser.id, recoveryCode);
+    if (!res.success) setError(res.error || 'No se pudo guardar el codigo');
+    else setInfo('Codigo de recuperacion guardado');
+    setSavingRecoveryCode(false);
+  }
+
+  async function handleChangePassword(e) {
+    e.preventDefault();
+    setError('');
+    setInfo('');
+    if (newPassword.length < 6) {
+      setError('La contrasena debe tener al menos 6 caracteres.');
+      return;
+    }
+    if (newPassword !== newPassword2) {
+      setError('Las contrasenas no coinciden.');
+      return;
+    }
+    if (!currentPassword) {
+      setError('Introduce tu contrasena actual.');
+      return;
+    }
+
+    setSavingPassword(true);
+    try {
+      // Re-auth to ensure the user knows the current password.
+      const email = authEmailFromChapa(currentUser.chapa);
+      const { error: signErr } = await supabase.auth.signInWithPassword({ email, password: currentPassword });
+      if (signErr) {
+        setError('Contrasena actual incorrecta.');
+        setSavingPassword(false);
+        return;
+      }
+
+      const { error: upErr } = await supabase.auth.updateUser({ password: newPassword });
+      if (upErr) {
+        setError(upErr.message);
+        setSavingPassword(false);
+        return;
+      }
+
+      setCurrentPassword('');
+      setNewPassword('');
+      setNewPassword2('');
+      setInfo('Contrasena actualizada');
+    } finally {
+      setSavingPassword(false);
+    }
+  }
+
   return (
     <div className="page profile-page">
       <header className="page-header">
@@ -178,9 +256,61 @@ export default function Profile() {
           <p className="text-sm-muted" style={{ marginTop: 8 }}>
             Pulsa el avatar para subir una foto.
           </p>
+          {currentUser.avatar_url ? (
+            <button type="button" className="btn-secondary" style={{ marginTop: 10, padding: '10px 12px' }} onClick={handleDeleteAvatar} disabled={deletingAvatar}>
+              {deletingAvatar ? 'Eliminando...' : 'Eliminar foto'}
+            </button>
+          ) : null}
           <input ref={fileRef} type="file" accept="image/*" onChange={handleAvatarChange} style={{ display: 'none' }} />
           {uploading && <p className="text-sm-muted">Subiendo foto...</p>}
         </div>
+      </div>
+
+      <div className="form-section" style={{ marginBottom: 16 }}>
+        <div className="form-section-header">
+          <h2 style={{ fontSize: 16, fontWeight: 800 }}>Seguridad</h2>
+        </div>
+        <p className="form-section-desc">
+          Puedes configurar un codigo de recuperacion para resetear la contrasena sin email, y tambien cambiar tu contrasena desde aqui.
+        </p>
+
+        <form onSubmit={handleSaveRecoveryCode}>
+          <div className="input-group" style={{ marginBottom: 12 }}>
+            <label htmlFor="recoveryCode">Codigo de recuperacion (6 digitos)</label>
+            <input
+              id="recoveryCode"
+              type="text"
+              inputMode="numeric"
+              value={recoveryCode}
+              onChange={(e) => setRecoveryCodeInput(e.target.value.replace(/\D+/g, '').slice(0, 6))}
+              placeholder="******"
+              autoComplete="one-time-code"
+            />
+          </div>
+          <button type="submit" className="btn-secondary" disabled={savingRecoveryCode}>
+            {savingRecoveryCode ? 'Guardando...' : 'Guardar codigo'}
+          </button>
+        </form>
+
+        <div style={{ height: 14 }} />
+
+        <form onSubmit={handleChangePassword}>
+          <div className="input-group">
+            <label htmlFor="currentPassword">Contrasena actual</label>
+            <input id="currentPassword" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" />
+          </div>
+          <div className="input-group">
+            <label htmlFor="newPassword">Nueva contrasena</label>
+            <input id="newPassword" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
+          </div>
+          <div className="input-group">
+            <label htmlFor="newPassword2">Repite contrasena</label>
+            <input id="newPassword2" type="password" value={newPassword2} onChange={(e) => setNewPassword2(e.target.value)} autoComplete="new-password" />
+          </div>
+          <button type="submit" className="btn-secondary" disabled={savingPassword}>
+            {savingPassword ? 'Guardando...' : 'Cambiar contrasena'}
+          </button>
+        </form>
       </div>
 
       <form onSubmit={handleSave} className="login-form">

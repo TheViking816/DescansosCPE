@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import CreateOffer from './pages/CreateOffer';
 import MyOffers from './pages/MyOffers';
 import Profile from './pages/Profile';
+import PasswordRecoveryPage from './pages/PasswordRecoveryPage';
 import Navbar from './components/Navbar';
 
 function ProtectedRoute({ children }) {
@@ -41,12 +42,15 @@ function AppRoutes() {
           <Route path="/login" element={
             authUser ? <Navigate to="/dashboard" replace /> : <LoginPage />
           } />
-          <Route path="/register" element={
-            authUser ? <Navigate to="/dashboard" replace /> : <RegisterPage />
-          } />
-          <Route path="/dashboard" element={
-            <ProtectedRoute><Dashboard /></ProtectedRoute>
-          } />
+        <Route path="/register" element={
+          authUser ? <Navigate to="/dashboard" replace /> : <RegisterPage />
+        } />
+        <Route path="/recuperar" element={
+          authUser ? <Navigate to="/dashboard" replace /> : <PasswordRecoveryPage />
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute><Dashboard /></ProtectedRoute>
+        } />
           <Route path="/crear" element={
             <ProtectedRoute><CreateOffer /></ProtectedRoute>
           } />
