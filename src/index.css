@@ -195,8 +195,8 @@ body {
 }
 
 .login-icon {
-  width: 80px;
-  height: 80px;
+  width: 104px;
+  height: 104px;
   margin: 0 auto 16px;
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-teal));
   border-radius: var(--radius-lg);
