@@ -36,6 +36,9 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
+        clientsClaim: true,
+        skipWaiting: true,
+        cleanupOutdatedCaches: true,
         // Important: don't serve the SPA shell for real assets like PDFs (or images).
         // Otherwise "Abrir PDF" can open the app instead of the file in the PWA.
         navigateFallbackDenylist: [
