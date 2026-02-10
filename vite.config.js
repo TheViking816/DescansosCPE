@@ -36,7 +36,13 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}']
+        // Important: don't serve the SPA shell for real assets like PDFs (or images).
+        // Otherwise "Abrir PDF" can open the app instead of the file in the PWA.
+        navigateFallbackDenylist: [
+          /^\/assets\/.*\.(?:pdf|png|jpg|jpeg|webp|gif|svg)$/i,
+          /^\/pwa\/.*$/i,
+        ],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest,pdf,jpg,jpeg,webp}']
       }
     })
   ],
