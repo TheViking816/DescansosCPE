@@ -5,6 +5,16 @@ import { getSpecialties } from '../data/specialtiesData';
 import { updateUserProfile, uploadUserAvatar } from '../data/usersData';
 import { isValidChapa, normalizeChapa } from '../lib/authId';
 
+function titleCaseWords(s) {
+  return String(s || '')
+    .trim()
+    .toLowerCase()
+    .split(/\s+/g)
+    .filter(Boolean)
+    .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1) : w))
+    .join(' ');
+}
+
 export default function Profile() {
   const { currentUser, refreshProfile, logout } = useAuth();
   const fileRef = useRef(null);
@@ -64,7 +74,7 @@ export default function Profile() {
   const currentEspecialidadLabel = useMemo(() => {
     const code = currentUser.especialidad_codigo || '';
     const sp = specialties.find((x) => String(x.codigo) === String(code));
-    if (sp) return `${sp.codigo} ${sp.nombre}`;
+    if (sp) return `${sp.codigo} ${titleCaseWords(sp.nombre)}`;
     return code ? String(code) : '';
   }, [currentUser.especialidad_codigo, specialties]);
 
