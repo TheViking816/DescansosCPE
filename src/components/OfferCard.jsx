@@ -74,7 +74,7 @@ export default function OfferCard({ offer, user, matchQuality, showMatch = false
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
               <path d="M12 19V5M5 12l7-7 7 7" />
             </svg>
-            Ofrezco descanso
+            Tengo
           </div>
           <div className="date-value">{formatDateRange(offer.tengoDesde, offer.tengoHasta)}</div>
         </div>
@@ -88,7 +88,7 @@ export default function OfferCard({ offer, user, matchQuality, showMatch = false
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="16" height="16">
               <path d="M12 5v14M5 12l7 7 7-7" />
             </svg>
-            Necesito descanso
+            Quiero
           </div>
           <div className="date-value">{formatDateRange(offer.necesitoDesde, offer.necesitoHasta)}</div>
         </div>

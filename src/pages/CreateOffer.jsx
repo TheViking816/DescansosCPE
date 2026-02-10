@@ -91,7 +91,7 @@ export default function CreateOffer() {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
                             <path d="M12 19V5M5 12l7-7 7 7" />
                         </svg>
-                        <h2>Ofrezco descansar</h2>
+                        <h2>Tengo</h2>
                     </div>
                     <p className="form-section-desc">Días que tengo de descanso y estoy dispuesto a trabajar</p>
                     <div className="date-inputs">
@@ -131,7 +131,7 @@ export default function CreateOffer() {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
                             <path d="M12 5v14M5 12l7 7 7-7" />
                         </svg>
-                        <h2>Necesito descansar</h2>
+                        <h2>Quiero</h2>
                     </div>
                     <p className="form-section-desc">Días en los que quiero descansar</p>
                     <div className="date-inputs">
