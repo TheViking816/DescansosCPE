@@ -95,7 +95,11 @@ export default function LoginPage() {
 
         <div className="login-footer">
           <p className="legal-note">
-            Este sistema es solo informativo. Todo cambio debe ser validado en el <strong>Portal oficial del CPE Valencia</strong>.
+            Este sistema es solo informativo. Todo cambio debe ser validado en el{' '}
+            <a href="https://portal.cpevalencia.com/" target="_blank" rel="noopener noreferrer">
+              <strong>Portal oficial del CPE Valencia</strong>
+            </a>
+            .
           </p>
           <p className="text-sm-muted" style={{ marginTop: 12 }}>
             ¿No tienes cuenta? <a href="/register">Crear cuenta</a>
@@ -105,3 +109,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

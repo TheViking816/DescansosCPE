@@ -713,6 +713,41 @@ body {
   transition: all var(--transition-normal);
 }
 
+.offer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.offer-actions .btn-whatsapp,
+.offer-actions .btn-secondary,
+.offer-actions .btn-cpe {
+  flex: 1;
+}
+
+.btn-cpe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition-normal);
+}
+
+.btn-cpe:hover {
+  background: rgba(59, 130, 246, 0.18);
+  transform: translateY(-1px);
+}
+
 .btn-whatsapp:hover {
   filter: brightness(1.1);
   transform: translateY(-1px);

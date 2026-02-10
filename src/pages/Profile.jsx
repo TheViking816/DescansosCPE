@@ -61,6 +61,13 @@ export default function Profile() {
     [specialties]
   );
 
+  const currentEspecialidadLabel = useMemo(() => {
+    const code = currentUser.especialidad_codigo || '';
+    const sp = specialties.find((x) => String(x.codigo) === String(code));
+    if (sp) return `${sp.codigo} ${sp.nombre}`;
+    return code ? String(code) : '';
+  }, [currentUser.especialidad_codigo, specialties]);
+
   function updateField(name, value) {
     setForm((p) => ({ ...p, [name]: value }));
     setError('');
@@ -156,7 +163,7 @@ export default function Profile() {
           <div className="user-tags">
             <span className={`tag tag-grupo-${(currentUser.grupo_descanso || '').toLowerCase()}`}>Grupo {currentUser.grupo_descanso}</span>
             <span className={`tag tag-semana-${(currentUser.semana || '').toLowerCase()}`}>{currentUser.semana === 'V' ? 'Verde' : 'Naranja'}</span>
-            <span className="tag tag-profesion">{currentUser.especialidad_codigo}</span>
+            <span className="tag tag-profesion">{currentEspecialidadLabel}</span>
           </div>
           <p className="text-sm-muted" style={{ marginTop: 8 }}>
             Pulsa el avatar para subir una foto.

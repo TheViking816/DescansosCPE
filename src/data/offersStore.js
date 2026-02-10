@@ -67,3 +67,17 @@ export async function deleteOffer(offerId) {
         .delete()
         .eq('id', offerId);
 }
+
+export async function updateOffer(offerId, patch) {
+    const { error } = await supabase
+        .from('ofertas')
+        .update({
+            tengo_desde: patch.tengoDesde,
+            tengo_hasta: patch.tengoHasta,
+            necesito_desde: patch.necesitoDesde,
+            necesito_hasta: patch.necesitoHasta,
+        })
+        .eq('id', offerId);
+
+    return !error;
+}

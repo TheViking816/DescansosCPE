@@ -6,7 +6,12 @@ export default function LegalDisclaimer() {
                 <line x1="12" y1="9" x2="12" y2="13" />
                 <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            <span>Este cambio debe ser validado en el <strong>Portal oficial del CPE Valencia</strong></span>
+            <span>
+                Este cambio debe ser validado en el{' '}
+                <a href="https://portal.cpevalencia.com/" target="_blank" rel="noopener noreferrer">
+                    <strong>Portal oficial del CPE Valencia</strong>
+                </a>
+            </span>
         </div>
     );
 }

@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { deleteOffer, getOffersByUser } from '../data/offersStore';
+import { deleteOffer, getOffersByUser, updateOffer } from '../data/offersStore';
 import { updateUserPhone } from '../data/usersData';
 import OfferCard from '../components/OfferCard';
 
 export default function MyOffers() {
   const { currentUser, refreshProfile } = useAuth();
   const [offers, setOffers] = useState([]);
+  const [editingOffer, setEditingOffer] = useState(null);
+  const [savingOffer, setSavingOffer] = useState(false);
+  const [offerError, setOfferError] = useState('');
   const [phone, setPhone] = useState(currentUser.telefono || '');
   const [editingPhone, setEditingPhone] = useState(false);
   const [savingPhone, setSavingPhone] = useState(false);
@@ -30,6 +33,30 @@ export default function MyOffers() {
       await deleteOffer(offerId);
       loadOffers();
     }
+  }
+
+  async function handleSaveOffer(e) {
+    e.preventDefault();
+    if (!editingOffer) return;
+    setOfferError('');
+    setSavingOffer(true);
+
+    const ok = await updateOffer(editingOffer.id, {
+      tengoDesde: editingOffer.tengoDesde,
+      tengoHasta: editingOffer.tengoHasta,
+      necesitoDesde: editingOffer.necesitoDesde,
+      necesitoHasta: editingOffer.necesitoHasta,
+    });
+
+    if (!ok) {
+      setOfferError('No se pudo guardar la oferta.');
+      setSavingOffer(false);
+      return;
+    }
+
+    setSavingOffer(false);
+    setEditingOffer(null);
+    loadOffers();
   }
 
   async function handleSavePhone() {
@@ -96,6 +123,63 @@ export default function MyOffers() {
       </div>
 
       <div className="offers-feed">
+        {editingOffer && (
+          <div className="form-section" style={{ marginBottom: 16 }}>
+            <div className="form-section-header">
+              <h2 style={{ fontSize: 16, fontWeight: 800 }}>Editar oferta</h2>
+            </div>
+            <form onSubmit={handleSaveOffer} className="create-form">
+              <div className="date-inputs">
+                <div className="input-group">
+                  <label>Ofrezco desde</label>
+                  <input
+                    type="date"
+                    value={editingOffer.tengoDesde}
+                    onChange={(e) => setEditingOffer((p) => ({ ...p, tengoDesde: e.target.value }))}
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Ofrezco hasta</label>
+                  <input
+                    type="date"
+                    value={editingOffer.tengoHasta}
+                    min={editingOffer.tengoDesde}
+                    onChange={(e) => setEditingOffer((p) => ({ ...p, tengoHasta: e.target.value }))}
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Necesito desde</label>
+                  <input
+                    type="date"
+                    value={editingOffer.necesitoDesde}
+                    onChange={(e) => setEditingOffer((p) => ({ ...p, necesitoDesde: e.target.value }))}
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Necesito hasta</label>
+                  <input
+                    type="date"
+                    value={editingOffer.necesitoHasta}
+                    min={editingOffer.necesitoDesde}
+                    onChange={(e) => setEditingOffer((p) => ({ ...p, necesitoHasta: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {offerError && <div className="login-error" style={{ marginTop: 12 }}>{offerError}</div>}
+
+              <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
+                <button type="submit" className="btn-primary" disabled={savingOffer} style={{ flex: 1 }}>
+                  {savingOffer ? <span className="spinner"></span> : 'Guardar'}
+                </button>
+                <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => setEditingOffer(null)}>
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+
         {offers.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">
@@ -108,7 +192,16 @@ export default function MyOffers() {
             <p>Publica tu primer cambio de descanso</p>
           </div>
         ) : (
-          offers.map((offer) => <OfferCard key={offer.id} offer={offer} user={currentUser} isOwn={true} onDelete={handleDelete} />)
+          offers.map((offer) => (
+            <div key={offer.id}>
+              <OfferCard offer={offer} user={currentUser} isOwn={true} onDelete={handleDelete} />
+              <div style={{ display: 'flex', gap: 10, margin: '-6px 0 16px 0' }}>
+                <button type="button" className="btn-secondary" style={{ flex: 1 }} onClick={() => setEditingOffer(offer)}>
+                  Editar oferta
+                </button>
+              </div>
+            </div>
+          ))
         )}
       </div>
     </div>
