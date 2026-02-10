@@ -29,8 +29,10 @@ async function makeIcon({ size, filename, paddingRatio, bg }) {
   const padding = Math.round(size * paddingRatio);
   const content = size - padding * 2;
 
+  // Trim transparent/solid margins so the icon fills the canvas better.
   const logo = await sharp(srcPng)
     .ensureAlpha()
+    .trim()
     .resize(content, content, { fit: 'contain' })
     .png()
     .toBuffer();
@@ -45,22 +47,22 @@ async function makeIcon({ size, filename, paddingRatio, bg }) {
 async function main() {
   await ensureDir(outDir);
 
-  // Dark maritime base similar to current UI
-  const bg = '#0a0f1a';
+  // White base so launcher icons don't look like a small logo inside a dark blob.
+  const bg = '#ffffff';
 
-  // Standard icons (tight)
-  await makeIcon({ size: 192, filename: 'icon-192.png', paddingRatio: 0.12, bg });
-  await makeIcon({ size: 512, filename: 'icon-512.png', paddingRatio: 0.12, bg });
+  // Standard icons (very tight)
+  await makeIcon({ size: 192, filename: 'icon-192.png', paddingRatio: 0.03, bg });
+  await makeIcon({ size: 512, filename: 'icon-512.png', paddingRatio: 0.03, bg });
 
-  // Maskable icons (more padding so it doesn't get clipped)
-  await makeIcon({ size: 192, filename: 'maskable-192.png', paddingRatio: 0.22, bg });
-  await makeIcon({ size: 512, filename: 'maskable-512.png', paddingRatio: 0.22, bg });
+  // Maskable icons (some padding so it doesn't get clipped by masks)
+  await makeIcon({ size: 192, filename: 'maskable-192.png', paddingRatio: 0.12, bg });
+  await makeIcon({ size: 512, filename: 'maskable-512.png', paddingRatio: 0.12, bg });
 
-  // Apple touch icon (slightly tighter)
-  await makeIcon({ size: 180, filename: 'apple-touch-icon.png', paddingRatio: 0.12, bg });
+  // Apple touch icon (tight)
+  await makeIcon({ size: 180, filename: 'apple-touch-icon.png', paddingRatio: 0.03, bg });
 
   // Simple favicon base from 64 -> will be used to generate ICO in the next step (if desired)
-  await makeIcon({ size: 64, filename: 'favicon-64.png', paddingRatio: 0.18, bg });
+  await makeIcon({ size: 64, filename: 'favicon-64.png', paddingRatio: 0.02, bg });
 
   console.log('Generated PWA icons in public/pwa');
 }

@@ -18,7 +18,7 @@ export default defineConfig({
       ],
       manifest: {
         name: 'Descansos CPE',
-        short_name: 'Descansos',
+        short_name: 'Descansos CPE',
         description: 'Intercambio de dias de descanso para trabajadores del Puerto de Valencia',
         lang: 'es',
         start_url: '/',
