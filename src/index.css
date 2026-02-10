@@ -39,9 +39,10 @@
   --color-necesito: #f43f5e;
   --color-necesito-bg: rgba(244, 63, 94, 0.1);
 
-  --grupo-a: #3b82f6;
-  --grupo-b: #a855f7;
-  --grupo-c: #f97316;
+  /* Group colors aligned with the calendar legend */
+  --grupo-a: #2563eb; /* Azul */
+  --grupo-b: #facc15; /* Amarillo */
+  --grupo-c: #ef4444; /* Rojo */
   --semana-v: #22c55e;
   --semana-n: #f97316;
 
@@ -671,12 +672,12 @@ body {
 }
 
 .tag-grupo-b {
-  background: rgba(168, 85, 247, 0.15);
+  background: rgba(250, 204, 21, 0.18);
   color: var(--grupo-b);
 }
 
 .tag-grupo-c {
-  background: rgba(249, 115, 22, 0.15);
+  background: rgba(239, 68, 68, 0.14);
   color: var(--grupo-c);
 }
 
