@@ -118,7 +118,7 @@ export default function OfferCard({ offer, user, matchQuality, showMatch = false
             )}
 
             <a href={CPE_PORTAL_URL} target="_blank" rel="noopener noreferrer" className="btn-cpe">
-              Verificar en CPE
+              Abrir Portal CPE
             </a>
           </div>
         )}
