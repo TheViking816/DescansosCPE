@@ -1091,6 +1091,26 @@ body {
   display: block;
 }
 
+.calendar-image-viewer {
+  margin-top: 12px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-input);
+  box-shadow: var(--shadow-sm);
+}
+
+.calendar-image-link {
+  display: block;
+  text-decoration: none;
+}
+
+.calendar-image-viewer img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 .phone-input {
   flex: 1;
   min-width: 220px;

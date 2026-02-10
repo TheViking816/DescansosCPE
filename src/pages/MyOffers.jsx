@@ -26,7 +26,7 @@ export default function MyOffers() {
   const [editingPhone, setEditingPhone] = useState(false);
   const [savingPhone, setSavingPhone] = useState(false);
   const [specialties, setSpecialties] = useState([]);
-  const [showCalendar, setShowCalendar] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(true);
 
   useEffect(() => {
     setPhone(currentUser.telefono || '');
@@ -56,6 +56,7 @@ export default function MyOffers() {
   }, [currentUser.especialidad_codigo, currentUser.especialidadCodigo, specialties]);
 
   const calendarPdfUrl = useMemo(() => new URL('../../assets/descansos.pdf', import.meta.url).href, []);
+  const calendarImgUrl = useMemo(() => new URL('../../assets/descansos.jpg', import.meta.url).href, []);
 
   async function handleDelete(offerId) {
     if (window.confirm('Seguro que quieres eliminar esta oferta?')) {
@@ -165,7 +166,7 @@ export default function MyOffers() {
           <h2 style={{ fontSize: 16, fontWeight: 800 }}>Calendario de descansos</h2>
         </div>
         <p className="form-section-desc">
-          Visor rapido del calendario. En algunos moviles (sobre todo iOS) el PDF puede abrirse mejor en otra pestana.
+          Vista rapida del calendario. Si necesitas mas detalle, abre el PDF.
         </p>
         <div className="calendar-actions">
           <a className="btn-secondary" href={calendarPdfUrl} target="_blank" rel="noreferrer">
@@ -176,8 +177,10 @@ export default function MyOffers() {
           </button>
         </div>
         {showCalendar ? (
-          <div className="pdf-viewer">
-            <iframe title="Calendario de descansos" src={calendarPdfUrl} />
+          <div className="calendar-image-viewer">
+            <a href={calendarImgUrl} target="_blank" rel="noreferrer" className="calendar-image-link">
+              <img src={calendarImgUrl} alt="Calendario laboral 2026" loading="lazy" />
+            </a>
           </div>
         ) : null}
       </div>
