@@ -1,5 +1,48 @@
 import { supabase } from '../lib/supabaseClient';
 
+function chapaFromAuthEmail(email) {
+  const m = String(email || '').match(/^(\d{5})@descansos-cpe\.com$/i);
+  return m ? m[1] : '';
+}
+
+export async function ensureProfileForAuthUser(authUser) {
+  try {
+    if (!authUser?.id) return { success: false, error: 'Missing auth user' };
+
+    const meta = authUser.user_metadata || {};
+    const chapa = String(meta.chapa || chapaFromAuthEmail(authUser.email) || '').trim();
+    const nombre = String(meta.nombre || 'Usuario').trim();
+    const telefono = meta.telefono ? String(meta.telefono).trim() : null;
+    const grupo_descanso = String(meta.grupo_descanso || 'A').trim();
+    const semana = String(meta.semana || 'V').trim();
+    const especialidad_codigo = String(meta.especialidad_codigo || '01').trim();
+
+    // Try insert (id = auth.uid). If it already exists, it's fine.
+    const { error } = await supabase.from('usuarios').insert({
+      id: authUser.id,
+      chapa,
+      nombre,
+      telefono,
+      grupo_descanso,
+      semana,
+      especialidad_codigo,
+    });
+
+    if (error) {
+      // "already exists" is ok; we'll just re-fetch.
+      const msg = String(error.message || '').toLowerCase();
+      if (msg.includes('duplicate') || msg.includes('already') || msg.includes('unique')) {
+        return { success: true };
+      }
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: String(e?.message || e) };
+  }
+}
+
 export async function getProfileByAuthUserId(authUserId) {
   const { data, error } = await supabase
     .from('usuarios')

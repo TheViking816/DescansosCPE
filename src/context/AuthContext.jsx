@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { getProfileByAuthUserId } from '../data/usersData';
+import { ensureProfileForAuthUser, getProfileByAuthUserId } from '../data/usersData';
 import { normalizePhoneE164 } from '../lib/phone';
 import { authEmailFromChapa, isValidChapa, normalizeChapa } from '../lib/authId';
 
@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null); // profile row from `usuarios`
   const [profileLoading, setProfileLoading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [profileError, setProfileError] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -44,12 +45,21 @@ export function AuthProvider({ children }) {
       if (!authUser?.id) {
         setCurrentUser(null);
         setProfileLoading(false);
+        setProfileError('');
         return;
       }
       setProfileLoading(true);
+      setProfileError('');
       const profile = await getProfileByAuthUserId(authUser.id);
+      // If the profile row is missing (common if SQL/trigger wasn't installed at signup time),
+      // attempt to create it client-side from auth metadata, then re-fetch.
+      if (!profile && authUser) {
+        const res = await ensureProfileForAuthUser(authUser);
+        if (!res.success) setProfileError(res.error || 'No se pudo crear el perfil');
+      }
+      const profile2 = profile || (await getProfileByAuthUserId(authUser.id));
       if (!cancelled) {
-        setCurrentUser(profile);
+        setCurrentUser(profile2);
         setProfileLoading(false);
       }
     }
@@ -117,8 +127,14 @@ export function AuthProvider({ children }) {
 
   async function refreshProfile() {
     if (!authUser?.id) return;
+    setProfileError('');
     const profile = await getProfileByAuthUserId(authUser.id);
-    setCurrentUser(profile);
+    if (!profile && authUser) {
+      const res = await ensureProfileForAuthUser(authUser);
+      if (!res.success) setProfileError(res.error || 'No se pudo crear el perfil');
+    }
+    const profile2 = profile || (await getProfileByAuthUserId(authUser.id));
+    setCurrentUser(profile2);
   }
 
   const value = {
@@ -126,6 +142,7 @@ export function AuthProvider({ children }) {
     authUser,
     currentUser,
     profileLoading,
+    profileError,
     loading,
     login,
     register,

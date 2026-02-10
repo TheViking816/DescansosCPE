@@ -11,6 +11,17 @@ import App from './App.jsx'
   if (!saved) localStorage.setItem('theme', theme);
 }
 
+// "SW-kill": if the Service Worker updates and takes control, force a one-time reload
+// to avoid blank screens caused by stale cached HTML/JS after deploys.
+if ('serviceWorker' in navigator) {
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloaded) return;
+    reloaded = true;
+    window.location.reload();
+  });
+}
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />

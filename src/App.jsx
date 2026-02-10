@@ -9,7 +9,7 @@ import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
 
 function ProtectedRoute({ children }) {
-  const { authUser, currentUser, loading, profileLoading, logout, refreshProfile } = useAuth();
+  const { authUser, currentUser, loading, profileLoading, profileError, logout, refreshProfile } = useAuth();
   if (loading) return <div className="loading-screen"><span className="spinner large"></span></div>;
   if (!authUser) return <Navigate to="/login" replace />;
   // Authenticated but profile still loading/creating
@@ -21,6 +21,11 @@ function ProtectedRoute({ children }) {
         <p style={{ marginBottom: 18, opacity: 0.8, fontSize: 14 }}>
           Si acabas de registrarte, asegurate de haber ejecutado el SQL de configuracion en Supabase.
         </p>
+        {profileError ? (
+          <p style={{ marginBottom: 18, opacity: 0.9, fontSize: 13, color: 'var(--danger)' }}>
+            {profileError}
+          </p>
+        ) : null}
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           <button className="btn-primary" onClick={refreshProfile}>Reintentar</button>
           <button className="btn-secondary" onClick={logout}>Salir</button>
