@@ -183,7 +183,17 @@ export default function Dashboard() {
             <option value="N">Naranja</option>
           </select>
 
-          <input type="date" value={filterFecha} onChange={(e) => setFilterFecha(e.target.value)} className="filter-date" />
+          <div className="filter-date-wrap">
+            <input
+              type="date"
+              value={filterFecha}
+              onChange={(e) => setFilterFecha(e.target.value)}
+              className="filter-date"
+              aria-label="Filtrar por fecha"
+            />
+            {!filterFecha ? <span className="filter-date-placeholder">Filtrar por fecha</span> : null}
+            <span className="filter-date-icon" aria-hidden="true">📅</span>
+          </div>
         </div>
 
         {(filterGrupo || filterSemana || filterFecha || filterEspecialidad) && (
