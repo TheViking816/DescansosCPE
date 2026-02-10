@@ -502,6 +502,31 @@ body {
   padding-right: 40px;
 }
 
+/* Hide the native dd/mm/aaaa placeholder when empty, so it doesn't overlap our custom placeholder (Chrome/Android). */
+.filter-date[value=""] {
+  color: transparent;
+}
+
+.filter-date[value=""]::-webkit-datetime-edit {
+  color: transparent;
+}
+
+.filter-date[value=""]::-webkit-datetime-edit-text {
+  color: transparent;
+}
+
+.filter-date[value=""]::-webkit-datetime-edit-month-field {
+  color: transparent;
+}
+
+.filter-date[value=""]::-webkit-datetime-edit-day-field {
+  color: transparent;
+}
+
+.filter-date[value=""]::-webkit-datetime-edit-year-field {
+  color: transparent;
+}
+
 .filter-date-placeholder {
   position: absolute;
   left: 12px;
@@ -514,15 +539,6 @@ body {
   max-width: calc(100% - 56px);
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.filter-date-icon {
-  position: absolute;
-  right: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  opacity: 0.75;
-  pointer-events: none;
 }
 
 [data-theme="light"] .filter-select,

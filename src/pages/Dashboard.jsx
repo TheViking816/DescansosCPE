@@ -192,7 +192,6 @@ export default function Dashboard() {
               aria-label="Filtrar por fecha"
             />
             {!filterFecha ? <span className="filter-date-placeholder">Filtrar por fecha</span> : null}
-            <span className="filter-date-icon" aria-hidden="true">📅</span>
           </div>
         </div>
 
