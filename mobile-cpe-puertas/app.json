@@ -1,0 +1,18 @@
+{
+  "expo": {
+    "name": "CPE Puertas",
+    "slug": "cpe-puertas",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.cpe.puertas"
+    },
+    "plugins": [
+      "expo-asset"
+    ]
+  }
+}
