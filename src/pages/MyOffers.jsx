@@ -161,30 +161,6 @@ export default function MyOffers() {
         </div>
       </div>
 
-      <div className="form-section calendar-section" style={{ marginBottom: 16 }}>
-        <div className="form-section-header">
-          <h2 style={{ fontSize: 16, fontWeight: 800 }}>Calendario de descansos</h2>
-        </div>
-        <p className="form-section-desc">
-          Vista rapida del calendario. Si necesitas mas detalle, abre el PDF.
-        </p>
-        <div className="calendar-actions">
-          <a className="btn-secondary" href={calendarPdfUrl} target="_blank" rel="noreferrer">
-            Abrir PDF
-          </a>
-          <button type="button" className="btn-secondary" onClick={() => setShowCalendar((v) => !v)}>
-            {showCalendar ? 'Ocultar aqui' : 'Ver aqui'}
-          </button>
-        </div>
-        {showCalendar ? (
-          <div className="calendar-image-viewer">
-            <a href={calendarImgUrl} target="_blank" rel="noreferrer" className="calendar-image-link">
-              <img src={calendarImgUrl} alt="Calendario laboral 2026" loading="lazy" />
-            </a>
-          </div>
-        ) : null}
-      </div>
-
       <div className="offers-feed">
         {editingOffer && (
           <div className="form-section" style={{ marginBottom: 16 }}>
@@ -266,6 +242,30 @@ export default function MyOffers() {
             </div>
           ))
         )}
+      </div>
+
+      <div className="form-section calendar-section" style={{ marginTop: 8 }}>
+        <div className="form-section-header">
+          <h2 style={{ fontSize: 16, fontWeight: 800 }}>Calendario de descansos</h2>
+        </div>
+        <p className="form-section-desc">
+          Vista rapida del calendario. Si necesitas mas detalle, abre el PDF.
+        </p>
+        <div className="calendar-actions">
+          <a className="btn-secondary" href={calendarPdfUrl} target="_blank" rel="noreferrer">
+            Abrir PDF
+          </a>
+          <button type="button" className="btn-secondary" onClick={() => setShowCalendar((v) => !v)}>
+            {showCalendar ? 'Ocultar aqui' : 'Ver aqui'}
+          </button>
+        </div>
+        {showCalendar ? (
+          <div className="calendar-image-viewer">
+            <a href={calendarImgUrl} target="_blank" rel="noreferrer" className="calendar-image-link">
+              <img src={calendarImgUrl} alt="Calendario laboral 2026" loading="lazy" />
+            </a>
+          </div>
+        ) : null}
       </div>
     </div>
   );
