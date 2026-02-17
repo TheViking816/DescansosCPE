@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { differenceInCalendarDays, isValid, parseISO, startOfDay } from 'date-fns';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { getOffers } from '../data/offersStore';
@@ -6,6 +7,59 @@ import OfferCard from '../components/OfferCard';
 import LegalDisclaimer from '../components/LegalDisclaimer';
 import ThemeToggle from '../components/ThemeToggle';
 import { getSpecialties } from '../data/specialtiesData';
+
+const MATCH_ORDER = { perfecto: 0, parcial: 1, posible: 2 };
+
+function parseDateValue(value) {
+  if (!value) return null;
+  const parsed = parseISO(value);
+  return isValid(parsed) ? startOfDay(parsed) : null;
+}
+
+function getOfferCompleteness(offer) {
+  let score = 0;
+  if (offer.tengoDesde) score += 1;
+  if (offer.tengoHasta) score += 1;
+  if (offer.necesitoDesde) score += 1;
+  if (offer.necesitoHasta) score += 1;
+  return score;
+}
+
+function getUrgencyData(offer, today) {
+  const tengoDesde = parseDateValue(offer.tengoDesde);
+  const tengoHasta = parseDateValue(offer.tengoHasta);
+  const necesitoDesde = parseDateValue(offer.necesitoDesde);
+  const necesitoHasta = parseDateValue(offer.necesitoHasta);
+
+  const upcomingStarts = [tengoDesde, necesitoDesde].filter((d) => d && d >= today);
+  const endDates = [tengoHasta, necesitoHasta].filter(Boolean);
+  const latestEnd = endDates.length > 0 ? new Date(Math.max(...endDates.map((d) => d.getTime()))) : null;
+  const isExpired = latestEnd ? latestEnd < today : false;
+
+  const activeNow = [
+    { desde: tengoDesde, hasta: tengoHasta },
+    { desde: necesitoDesde, hasta: necesitoHasta },
+  ].some((range) => range.desde && range.hasta && range.desde <= today && range.hasta >= today);
+
+  let relevantDate = null;
+  if (upcomingStarts.length > 0) {
+    relevantDate = new Date(Math.min(...upcomingStarts.map((d) => d.getTime())));
+  } else if (!isExpired && activeNow) {
+    relevantDate = today;
+  }
+
+  return {
+    isExpired,
+    relevantDate,
+    urgencyDays: relevantDate ? differenceInCalendarDays(relevantDate, today) : null,
+  };
+}
+
+function getStableIdValue(offerId) {
+  const n = Number(offerId);
+  if (!Number.isNaN(n)) return n;
+  return String(offerId || '');
+}
 
 export default function Dashboard() {
   const { currentUser } = useAuth();
@@ -71,6 +125,7 @@ export default function Dashboard() {
   const displayOffers = useMemo(() => {
     if (loading || !currentUser || !usersMap[currentUser.id]) return [];
 
+    const today = startOfDay(new Date());
     const othersOffers = offers.filter((o) => o.userId !== currentUser.id);
     const myOffers = offers.filter((o) => o.userId === currentUser.id);
     const me = usersMap[currentUser.id];
@@ -126,11 +181,40 @@ export default function Dashboard() {
           if (bestMatch === 'posible' && quality !== 'posible') bestMatch = quality;
         }
 
-        return { offer, quality: bestMatch, user: otherUser };
+        const urgency = getUrgencyData(offer, today);
+        const createdAtDate = parseDateValue(offer.createdAt) || new Date(0);
+        return {
+          offer,
+          quality: bestMatch,
+          user: otherUser,
+          ...urgency,
+          completeness: getOfferCompleteness(offer),
+          createdAtDate,
+          stableId: getStableIdValue(offer.id),
+        };
       })
       .sort((a, b) => {
-        const order = { perfecto: 0, parcial: 1, posible: 2 };
-        return order[a.quality] - order[b.quality];
+        if (a.isExpired !== b.isExpired) return a.isExpired ? 1 : -1;
+        if (a.relevantDate && b.relevantDate) {
+          const byRelevantDate = a.relevantDate.getTime() - b.relevantDate.getTime();
+          if (byRelevantDate !== 0) return byRelevantDate;
+        } else if (a.relevantDate !== b.relevantDate) {
+          return a.relevantDate ? -1 : 1;
+        }
+
+        const byQuality = MATCH_ORDER[a.quality] - MATCH_ORDER[b.quality];
+        if (byQuality !== 0) return byQuality;
+
+        const byCompleteness = b.completeness - a.completeness;
+        if (byCompleteness !== 0) return byCompleteness;
+
+        const byNewest = b.createdAtDate.getTime() - a.createdAtDate.getTime();
+        if (byNewest !== 0) return byNewest;
+
+        if (typeof a.stableId === 'number' && typeof b.stableId === 'number') {
+          return b.stableId - a.stableId;
+        }
+        return String(b.stableId).localeCompare(String(a.stableId));
       });
   }, [offers, usersMap, currentUser, filterGrupo, filterSemana, filterFecha, filterEspecialidad, loading]);
 
@@ -235,13 +319,28 @@ export default function Dashboard() {
             )}
           </div>
         ) : (
-          displayOffers.map(({ offer, quality }) => (
-            <OfferCard key={offer.id} offer={offer} user={usersMap[offer.userId]} matchQuality={quality} showMatch={true} />
+          displayOffers.map(({ offer, quality, isExpired, urgencyDays }) => (
+            <OfferCard
+              key={offer.id}
+              offer={offer}
+              user={usersMap[offer.userId]}
+              matchQuality={quality}
+              showMatch={true}
+              isExpired={isExpired}
+              urgencyDays={urgencyDays}
+              showUrgency={true}
+            />
           ))
         )}
       </div>
 
       <LegalDisclaimer />
+      <footer className="contact-footer">
+        <p>
+          Contacto para preguntas y sugerencias:{' '}
+          <a href="mailto:portalestibavlc@gmail.com">portalestibavlc@gmail.com</a>
+        </p>
+      </footer>
     </div>
   );
 }

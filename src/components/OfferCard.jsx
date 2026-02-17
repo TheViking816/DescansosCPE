@@ -30,7 +30,23 @@ function buildWhatsappUrl(rawPhone) {
 
 const CPE_PORTAL_URL = 'https://portal.cpevalencia.com/';
 
-export default function OfferCard({ offer, user, matchQuality, showMatch = false, isOwn = false, onDelete }) {
+function getUrgencyLabel(days) {
+  if (days <= 0) return 'Urgente hoy';
+  if (days === 1) return 'Urgente manana';
+  return `Urgente en ${days} dias`;
+}
+
+export default function OfferCard({
+  offer,
+  user,
+  matchQuality,
+  showMatch = false,
+  isOwn = false,
+  onDelete,
+  isExpired = false,
+  urgencyDays = null,
+  showUrgency = false,
+}) {
   if (!user) return null;
 
   const phone = user.telefono || user.phone || '';
@@ -67,6 +83,16 @@ export default function OfferCard({ offer, user, matchQuality, showMatch = false
           </div>
         </div>
       </div>
+
+      {showUrgency ? (
+        <div className="offer-meta-badges">
+          {isExpired ? (
+            <span className="offer-status-badge badge-expired">Vencida</span>
+          ) : (
+            urgencyDays !== null && urgencyDays <= 7 ? <span className="offer-status-badge badge-urgent">{getUrgencyLabel(urgencyDays)}</span> : null
+          )}
+        </div>
+      ) : null}
 
       <div className="offer-card-body">
         <div className="date-block date-tengo">
