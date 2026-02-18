@@ -32,9 +32,8 @@ function getUrgencyData(offer, today) {
   const necesitoHasta = parseDateValue(offer.necesitoHasta);
 
   const upcomingStarts = [tengoDesde, necesitoDesde].filter((d) => d && d >= today);
-  const endDates = [tengoHasta, necesitoHasta].filter(Boolean);
-  const latestEnd = endDates.length > 0 ? new Date(Math.max(...endDates.map((d) => d.getTime()))) : null;
-  const isExpired = latestEnd ? latestEnd < today : false;
+  // A swap is no longer usable once either side of the offer has completely passed.
+  const isExpired = Boolean((tengoHasta && tengoHasta < today) || (necesitoHasta && necesitoHasta < today));
 
   const activeNow = [
     { desde: tengoDesde, hasta: tengoHasta },
@@ -126,11 +125,11 @@ export default function Dashboard() {
     if (loading || !currentUser || !usersMap[currentUser.id]) return [];
 
     const today = startOfDay(new Date());
-    const othersOffers = offers.filter((o) => o.userId !== currentUser.id);
-    const myOffers = offers.filter((o) => o.userId === currentUser.id);
+    const currentUserId = String(currentUser.id);
+    const myOffers = offers.filter((o) => String(o.userId) === currentUserId);
     const me = usersMap[currentUser.id];
 
-    return othersOffers
+    return offers
       .filter((o) => {
         const u = usersMap[o.userId];
         if (!u) return false;
@@ -150,10 +149,11 @@ export default function Dashboard() {
         return true;
       })
       .map((offer) => {
+        const isOwn = String(offer.userId) === currentUserId;
         const otherUser = usersMap[offer.userId];
         let bestMatch = 'posible';
 
-        if (otherUser) {
+        if (otherUser && !isOwn) {
           const myGrupo = me.grupo_descanso || me.grupoDescanso;
           const otherGrupo = otherUser.grupo_descanso || otherUser.grupoDescanso;
           const sameGrupo = myGrupo === otherGrupo;
@@ -185,6 +185,7 @@ export default function Dashboard() {
         const createdAtDate = parseDateValue(offer.createdAt) || new Date(0);
         return {
           offer,
+          isOwn,
           quality: bestMatch,
           user: otherUser,
           ...urgency,
@@ -217,6 +218,9 @@ export default function Dashboard() {
         return String(b.stableId).localeCompare(String(a.stableId));
       });
   }, [offers, usersMap, currentUser, filterGrupo, filterSemana, filterFecha, filterEspecialidad, loading]);
+
+  const activeOffers = displayOffers.filter((item) => !item.isExpired);
+  const expiredOffers = displayOffers.filter((item) => item.isExpired);
 
   if (loading) {
     return (
@@ -305,32 +309,55 @@ export default function Dashboard() {
                 <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
             </div>
-            {offers.length > 0 ? (
-              <>
-                <h3>No hay ofertas de otros companeros</h3>
-                <p>Actualmente solo hay ofertas tuyas publicadas.</p>
-                <p className="text-sm-muted">Ve a "Mis DS" para gestionarlas.</p>
-              </>
-            ) : (
-              <>
-                <h3>No hay ofertas disponibles</h3>
-                <p>Se el primero en publicar un cambio de descanso</p>
-              </>
-            )}
+            <h3>No hay ofertas disponibles</h3>
+            <p>No hay ofertas que cumplan los filtros actuales.</p>
           </div>
         ) : (
-          displayOffers.map(({ offer, quality, isExpired, urgencyDays }) => (
-            <OfferCard
-              key={offer.id}
-              offer={offer}
-              user={usersMap[offer.userId]}
-              matchQuality={quality}
-              showMatch={true}
-              isExpired={isExpired}
-              urgencyDays={urgencyDays}
-              showUrgency={true}
-            />
-          ))
+          <>
+            <section className="offers-section">
+              <h2 className="offers-section-title">Ofertas activas ({activeOffers.length})</h2>
+              {activeOffers.length === 0 ? (
+                <p className="section-empty-copy">No hay ofertas activas ahora mismo.</p>
+              ) : (
+                activeOffers.map(({ offer, quality, urgencyDays, isOwn }) => (
+                  <OfferCard
+                    key={offer.id}
+                    offer={offer}
+                    user={usersMap[offer.userId]}
+                    matchQuality={quality}
+                    showMatch={!isOwn}
+                    isOwn={isOwn}
+                    showOwnBadge={isOwn}
+                    showDeleteForOwn={false}
+                    isExpired={false}
+                    urgencyDays={urgencyDays}
+                    showUrgency={true}
+                  />
+                ))
+              )}
+            </section>
+
+            {expiredOffers.length > 0 ? (
+              <section className="offers-section offers-section-expired">
+                <h2 className="offers-section-title">Ofertas finalizadas ({expiredOffers.length})</h2>
+                {expiredOffers.map(({ offer, quality, urgencyDays, isOwn }) => (
+                  <OfferCard
+                    key={offer.id}
+                    offer={offer}
+                    user={usersMap[offer.userId]}
+                    matchQuality={quality}
+                    showMatch={!isOwn}
+                    isOwn={isOwn}
+                    showOwnBadge={isOwn}
+                    showDeleteForOwn={false}
+                    isExpired={true}
+                    urgencyDays={urgencyDays}
+                    showUrgency={true}
+                  />
+                ))}
+              </section>
+            ) : null}
+          </>
         )}
       </div>
 

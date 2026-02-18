@@ -668,6 +668,12 @@ body {
   color: #cbd5e1;
 }
 
+.badge-own {
+  background: rgba(59, 130, 246, 0.14);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+  color: #93c5fd;
+}
+
 .user-avatar {
   width: 44px;
   height: 44px;
@@ -920,6 +926,27 @@ body {
 .empty-state p {
   font-size: 14px;
   color: var(--text-muted);
+}
+
+.offers-section {
+  margin-bottom: 18px;
+}
+
+.offers-section-title {
+  font-size: 15px;
+  font-weight: 800;
+  margin: 2px 0 10px;
+  letter-spacing: 0.2px;
+}
+
+.offers-section-expired .offer-card {
+  opacity: 0.88;
+}
+
+.section-empty-copy {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
 }
 
 /* ============================================
