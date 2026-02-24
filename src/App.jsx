@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
@@ -7,6 +8,7 @@ import CreateOffer from './pages/CreateOffer';
 import MyOffers from './pages/MyOffers';
 import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
+import { upsertUsageActivity } from './data/usageStore';
 
 function ProtectedRoute({ children }) {
   const { authUser, currentUser, loading, profileLoading, profileError, logout, refreshProfile } = useAuth();
@@ -37,7 +39,40 @@ function ProtectedRoute({ children }) {
 }
 
 function AppRoutes() {
-  const { authUser } = useAuth();
+  const { authUser, currentUser } = useAuth();
+  const location = useLocation();
+  const lastSentRef = useRef({ key: '', ts: 0 });
+
+  useEffect(() => {
+    if (!authUser?.id || !currentUser?.chapa) return;
+
+    const send = async () => {
+      const seccion = location.pathname || '/';
+      const now = Date.now();
+      const key = `${currentUser.chapa}|${seccion}`;
+
+      // Evita duplicados muy seguidos (StrictMode en dev / renders cercanos).
+      if (lastSentRef.current.key === key && now - lastSentRef.current.ts < 10_000) return;
+
+      lastSentRef.current = { key, ts: now };
+      await upsertUsageActivity({
+        chapa: currentUser.chapa,
+        seccion,
+      });
+    };
+
+    send();
+
+    const interval = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') return;
+      upsertUsageActivity({
+        chapa: currentUser.chapa,
+        seccion: location.pathname || '/',
+      });
+    }, 60_000);
+
+    return () => window.clearInterval(interval);
+  }, [authUser?.id, currentUser?.chapa, location.pathname]);
 
   return (
     <div className="app-shell">
