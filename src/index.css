@@ -805,6 +805,37 @@ body {
   color: var(--text-primary);
 }
 
+.date-values-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+
+.date-value-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-medium);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.date-tengo .date-value-chip {
+  border-color: rgba(59, 130, 246, 0.22);
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.date-necesito .date-value-chip {
+  border-color: rgba(244, 63, 94, 0.22);
+  background: rgba(244, 63, 94, 0.1);
+}
+
 .date-separator {
   color: var(--text-muted);
   flex-shrink: 0;
@@ -991,6 +1022,37 @@ body {
   margin-bottom: 16px;
 }
 
+.date-mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.date-mode-btn {
+  border: 1px solid var(--border-medium);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.date-mode-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-primary);
+}
+
+.date-mode-btn.active {
+  color: white;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent-primary), #2563eb);
+  box-shadow: 0 0 0 2px var(--accent-primary-glow);
+}
+
 .date-inputs {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1004,6 +1066,75 @@ body {
 .date-inputs input {
   padding: 12px;
   font-size: 14px;
+}
+
+.multi-day-picker {
+  display: grid;
+  gap: 10px;
+}
+
+.multi-day-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.multi-day-row .input-group {
+  margin-bottom: 0;
+}
+
+.multi-day-add-btn {
+  width: auto;
+  white-space: nowrap;
+  padding: 12px 14px;
+  height: fit-content;
+}
+
+.selected-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 40px;
+  padding: 8px;
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--border-medium);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+[data-theme="light"] .selected-days {
+  background: rgba(2, 6, 23, 0.02);
+}
+
+.selected-day-chip {
+  border: 1px solid rgba(59, 130, 246, 0.28);
+  background: rgba(59, 130, 246, 0.12);
+  color: var(--text-primary);
+  border-radius: var(--radius-full);
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.selected-day-chip:hover {
+  border-color: rgba(59, 130, 246, 0.45);
+  background: rgba(59, 130, 246, 0.18);
+}
+
+.selected-days-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  align-self: center;
+}
+
+.form-batch-hint {
+  margin: 10px 0 14px;
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(59, 130, 246, 0.18);
+  background: rgba(59, 130, 246, 0.06);
+  color: var(--text-secondary);
+  font-size: 13px;
 }
 
 .form-swap-icon {
@@ -1441,6 +1572,16 @@ body {
 
   .offer-card {
     padding: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .multi-day-row {
+    grid-template-columns: 1fr;
+  }
+
+  .multi-day-add-btn {
+    width: 100%;
   }
 }
 

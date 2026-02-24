@@ -21,6 +21,19 @@ function formatDateRange(desde, hasta) {
   return `${fd} -> ${fh}`;
 }
 
+function uniqueRanges(ranges) {
+  const seen = new Set();
+  const result = [];
+  for (const range of ranges || []) {
+    if (!range?.desde || !range?.hasta) continue;
+    const key = `${range.desde}|${range.hasta}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(range);
+  }
+  return result;
+}
+
 function buildWhatsappUrl(rawPhone) {
   const phoneE164 = normalizePhoneE164(rawPhone);
   if (!phoneE164) return null;
@@ -48,6 +61,7 @@ export default function OfferCard({
   isExpired = false,
   urgencyDays = null,
   showUrgency = false,
+  groupedOffers = null,
 }) {
   if (!user) return null;
 
@@ -58,6 +72,31 @@ export default function OfferCard({
     titleCaseWords(user.especialidad_nombre) ||
     titleCaseWords(user.especialidades?.nombre) ||
     '';
+
+  const groupedTengoRanges = uniqueRanges(
+    groupedOffers?.map((o) => ({ desde: o.tengoDesde, hasta: o.tengoHasta }))
+  );
+  const groupedNecesitoRanges = uniqueRanges(
+    groupedOffers?.map((o) => ({ desde: o.necesitoDesde, hasta: o.necesitoHasta }))
+  );
+  const tengoRanges = groupedTengoRanges.length > 0 ? groupedTengoRanges : [{ desde: offer.tengoDesde, hasta: offer.tengoHasta }];
+  const necesitoRanges =
+    groupedNecesitoRanges.length > 0 ? groupedNecesitoRanges : [{ desde: offer.necesitoDesde, hasta: offer.necesitoHasta }];
+  const isGroupedBatch = (groupedOffers?.length ?? 0) > 1;
+
+  function renderDateContent(ranges) {
+    if (ranges.length <= 1) return <div className="date-value">{formatDateRange(ranges[0].desde, ranges[0].hasta)}</div>;
+
+    return (
+      <div className="date-values-list" aria-label={`${ranges.length} opciones`}>
+        {ranges.map((range) => (
+          <span key={`${range.desde}|${range.hasta}`} className="date-value-chip">
+            {formatDateRange(range.desde, range.hasta)}
+          </span>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className={`offer-card ${showMatch ? `match-${matchQuality}` : ''}`}>
@@ -89,6 +128,7 @@ export default function OfferCard({
       {showUrgency ? (
         <div className="offer-meta-badges">
           {showOwnBadge ? <span className="offer-status-badge badge-own">Tu oferta</span> : null}
+          {isGroupedBatch ? <span className="offer-status-badge badge-own">Lote ({groupedOffers.length})</span> : null}
           {isExpired ? (
             <span className="offer-status-badge badge-expired">Vencida</span>
           ) : (
@@ -105,7 +145,7 @@ export default function OfferCard({
             </svg>
             Tengo
           </div>
-          <div className="date-value">{formatDateRange(offer.tengoDesde, offer.tengoHasta)}</div>
+          {renderDateContent(tengoRanges)}
         </div>
         <div className="date-separator" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
@@ -119,7 +159,7 @@ export default function OfferCard({
             </svg>
             Quiero
           </div>
-          <div className="date-value">{formatDateRange(offer.necesitoDesde, offer.necesitoHasta)}</div>
+          {renderDateContent(necesitoRanges)}
         </div>
       </div>
 

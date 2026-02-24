@@ -60,6 +60,45 @@ function getStableIdValue(offerId) {
   return String(offerId || '');
 }
 
+function getBestQuality(a, b) {
+  return MATCH_ORDER[a] <= MATCH_ORDER[b] ? a : b;
+}
+
+function groupDisplayOffers(items) {
+  const groups = [];
+  const byKey = new Map();
+
+  for (const item of items) {
+    const key = `${item.offer.userId}|${item.offer.createdAt}|${item.isExpired ? 'expired' : 'active'}`;
+    const existing = byKey.get(key);
+
+    if (!existing) {
+      const group = {
+        ...item,
+        groupedOffers: [item.offer],
+      };
+      byKey.set(key, group);
+      groups.push(group);
+      continue;
+    }
+
+    existing.groupedOffers.push(item.offer);
+    existing.quality = getBestQuality(existing.quality, item.quality);
+
+    const urgencies = [existing.urgencyDays, item.urgencyDays].filter((v) => v !== null);
+    existing.urgencyDays = urgencies.length > 0 ? Math.min(...urgencies) : null;
+
+    if (item.relevantDate && (!existing.relevantDate || item.relevantDate < existing.relevantDate)) {
+      existing.relevantDate = item.relevantDate;
+    }
+
+    if (item.completeness > existing.completeness) existing.completeness = item.completeness;
+    if (item.createdAtDate > existing.createdAtDate) existing.createdAtDate = item.createdAtDate;
+  }
+
+  return groups;
+}
+
 export default function Dashboard() {
   const { currentUser } = useAuth();
   const [offers, setOffers] = useState([]);
@@ -219,8 +258,9 @@ export default function Dashboard() {
       });
   }, [offers, usersMap, currentUser, filterGrupo, filterSemana, filterFecha, filterEspecialidad, loading]);
 
-  const activeOffers = displayOffers.filter((item) => !item.isExpired);
-  const expiredOffers = displayOffers.filter((item) => item.isExpired);
+  const groupedDisplayOffers = useMemo(() => groupDisplayOffers(displayOffers), [displayOffers]);
+  const activeOffers = groupedDisplayOffers.filter((item) => !item.isExpired);
+  const expiredOffers = groupedDisplayOffers.filter((item) => item.isExpired);
 
   if (loading) {
     return (
@@ -319,7 +359,7 @@ export default function Dashboard() {
               {activeOffers.length === 0 ? (
                 <p className="section-empty-copy">No hay ofertas activas ahora mismo.</p>
               ) : (
-                activeOffers.map(({ offer, quality, urgencyDays, isOwn }) => (
+                activeOffers.map(({ offer, quality, urgencyDays, isOwn, groupedOffers }) => (
                   <OfferCard
                     key={offer.id}
                     offer={offer}
@@ -332,6 +372,7 @@ export default function Dashboard() {
                     isExpired={false}
                     urgencyDays={urgencyDays}
                     showUrgency={true}
+                    groupedOffers={groupedOffers}
                   />
                 ))
               )}
@@ -340,7 +381,7 @@ export default function Dashboard() {
             {expiredOffers.length > 0 ? (
               <section className="offers-section offers-section-expired">
                 <h2 className="offers-section-title">Ofertas finalizadas ({expiredOffers.length})</h2>
-                {expiredOffers.map(({ offer, quality, urgencyDays, isOwn }) => (
+                {expiredOffers.map(({ offer, quality, urgencyDays, isOwn, groupedOffers }) => (
                   <OfferCard
                     key={offer.id}
                     offer={offer}
@@ -353,6 +394,7 @@ export default function Dashboard() {
                     isExpired={true}
                     urgencyDays={urgencyDays}
                     showUrgency={true}
+                    groupedOffers={groupedOffers}
                   />
                 ))}
               </section>

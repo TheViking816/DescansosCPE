@@ -61,6 +61,26 @@ export async function createOffer(offer) {
     return data;
 }
 
+export async function createOffersBatch(offers) {
+    if (!Array.isArray(offers) || offers.length === 0) return [];
+
+    const rows = offers.map((offer) => ({
+        user_id: offer.userId,
+        tengo_desde: offer.tengoDesde,
+        tengo_hasta: offer.tengoHasta,
+        necesito_desde: offer.necesitoDesde,
+        necesito_hasta: offer.necesitoHasta,
+    }));
+
+    const { data, error } = await supabase
+        .from('ofertas')
+        .insert(rows)
+        .select();
+
+    if (error) throw error;
+    return data ?? [];
+}
+
 export async function deleteOffer(offerId) {
     await supabase
         .from('ofertas')
