@@ -66,15 +66,67 @@ export async function updateUserPhone(authUserId, phone) {
   return !error;
 }
 
+async function parseFunctionInvokeError(error) {
+  if (!error) return 'No se pudo completar la operacion';
+  const fallback = error.message || 'No se pudo completar la operacion';
+
+  try {
+    if (error.context) {
+      const body = await error.context.json().catch(() => null);
+      if (body?.error) return String(body.error);
+    }
+  } catch {
+    // Keep the fallback message if the response body cannot be parsed.
+  }
+
+  return fallback;
+}
+
 export async function updateUserProfile(authUserId, patch) {
+  const chapaChanged = patch?.chapa !== undefined;
+
+  // Most profile changes do not need the Edge Function. This avoids hard failures when the
+  // function is unavailable and the user is only editing visible profile data (e.g. nombre).
+  if (!chapaChanged) {
+    const { error } = await supabase
+      .from('usuarios')
+      .update({
+        nombre: patch.nombre,
+        telefono: patch.telefono,
+        grupo_descanso: patch.grupo_descanso,
+        semana: patch.semana,
+        especialidad_codigo: patch.especialidad_codigo,
+      })
+      .eq('id', authUserId);
+
+    if (error) {
+      const msg = String(error.message || '');
+      if (msg.toLowerCase().includes('duplicate') || msg.toLowerCase().includes('unique')) {
+        return { success: false, error: 'Esa chapa ya existe.' };
+      }
+      return { success: false, error: msg || 'No se pudo guardar' };
+    }
+    return { success: true };
+  }
+
   // Changing chapa affects login identity (synthetic email). We handle that via an Edge Function
   // so we can update both auth.users and public.usuarios safely.
   const { data, error } = await supabase.functions.invoke('profile-update', {
     body: { patch },
   });
 
-  if (error) return { success: false, error: error.message };
+  if (error) return { success: false, error: await parseFunctionInvokeError(error) };
   if (!data?.success) return { success: false, error: data?.error || 'No se pudo guardar' };
+  return { success: true };
+}
+
+export async function deleteOwnAccount() {
+  const { data, error } = await supabase.functions.invoke('account-delete', {
+    body: {},
+  });
+
+  if (error) return { success: false, error: await parseFunctionInvokeError(error) };
+  if (!data?.success) return { success: false, error: data?.error || 'No se pudo eliminar la cuenta' };
   return { success: true };
 }
 

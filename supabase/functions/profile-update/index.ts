@@ -1,10 +1,17 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 function json(status: number, data: unknown) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
+      ...corsHeaders,
       "Content-Type": "application/json",
       "Cache-Control": "no-store",
     },
@@ -29,10 +36,14 @@ function authEmailFromChapa(chapa: string) {
 }
 
 Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   if (req.method !== "POST") return json(405, { success: false, error: "Method not allowed" });
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceKey) {
+    return json(500, { success: false, error: "Faltan variables de entorno de Supabase en la Edge Function." });
+  }
 
   const authHeader = req.headers.get("Authorization") ?? "";
   const jwt = authHeader.replace("Bearer ", "");
@@ -62,6 +73,9 @@ Deno.serve(async (req) => {
   if (patch.grupo_descanso !== undefined) next.grupo_descanso = String(patch.grupo_descanso ?? "").trim();
   if (patch.semana !== undefined) next.semana = String(patch.semana ?? "").trim();
   if (patch.especialidad_codigo !== undefined) next.especialidad_codigo = String(patch.especialidad_codigo ?? "").trim();
+  if (Object.keys(next).length === 0 && patch.chapa === undefined) {
+    return json(400, { success: false, error: "No hay cambios para guardar." });
+  }
 
   let chapaChangedTo: string | null = null;
   if (patch.chapa !== undefined) {
@@ -90,4 +104,3 @@ Deno.serve(async (req) => {
 
   return json(200, { success: true });
 });
-

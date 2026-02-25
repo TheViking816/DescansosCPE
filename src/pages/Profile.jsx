@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getGroups } from '../data/groupsData';
 import { getSpecialties } from '../data/specialtiesData';
-import { deleteUserAvatar, updateUserProfile, uploadUserAvatar } from '../data/usersData';
+import { deleteOwnAccount, deleteUserAvatar, updateUserProfile, uploadUserAvatar } from '../data/usersData';
 import { isValidChapa, normalizeChapa } from '../lib/authId';
 import { supabase } from '../lib/supabaseClient';
 import { authEmailFromChapa } from '../lib/authId';
@@ -39,6 +39,7 @@ export default function Profile() {
   const [info, setInfo] = useState('');
   const [uploading, setUploading] = useState(false);
   const [deletingAvatar, setDeletingAvatar] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -120,14 +121,18 @@ export default function Profile() {
     }
 
     setSaving(true);
-    const ok = await updateUserProfile(currentUser.id, {
+    const patch = {
       nombre: form.nombre.trim(),
-      chapa,
       telefono: form.telefono ? String(form.telefono).trim() : null,
       grupo_descanso: form.grupo_descanso,
       semana: form.semana,
       especialidad_codigo: form.especialidad_codigo,
-    });
+    };
+    if (chapa !== String(currentUser.chapa || '').trim()) {
+      patch.chapa = chapa;
+    }
+
+    const ok = await updateUserProfile(currentUser.id, patch);
     if (!ok.success) {
       setError(ok.error || 'No se pudo guardar');
       setSaving(false);
@@ -215,6 +220,34 @@ export default function Profile() {
     }
   }
 
+  async function handleDeleteAccount() {
+    setError('');
+    setInfo('');
+
+    const ok1 = window.confirm(
+      'Se eliminara tu cuenta y tus datos (perfil, ofertas y foto). Esta accion no se puede deshacer. Quieres continuar?',
+    );
+    if (!ok1) return;
+
+    const confirmText = window.prompt('Escribe ELIMINAR para confirmar');
+    if (confirmText !== 'ELIMINAR') {
+      setError('Eliminacion cancelada (confirmacion incorrecta).');
+      return;
+    }
+
+    setDeletingAccount(true);
+    try {
+      const res = await deleteOwnAccount();
+      if (!res.success) {
+        setError(res.error || 'No se pudo eliminar la cuenta');
+        return;
+      }
+      await logout();
+    } finally {
+      setDeletingAccount(false);
+    }
+  }
+
   return (
     <div className="page profile-page">
       <header className="page-header">
@@ -277,6 +310,18 @@ export default function Profile() {
             {savingPassword ? 'Guardando...' : 'Cambiar contrasena'}
           </button>
         </form>
+      </div>
+
+      <div className="form-section" style={{ marginBottom: 16 }}>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={handleDeleteAccount}
+          disabled={deletingAccount}
+          style={{ borderColor: '#f3b6b6', color: '#b42318' }}
+        >
+          {deletingAccount ? 'Eliminando cuenta...' : 'Eliminar cuenta'}
+        </button>
       </div>
 
       <form onSubmit={handleSave} className="login-form">
